@@ -97,7 +97,7 @@ def train(model, train_data_path, epochs, batch_size, loss_fn, optimizer, early_
 
     pretty_line = '\n! --------------------------------------------------------- !\n'
 
-    for epoch in range(epochs):
+    for epoch in tf.range(epochs):
 
         tf.print(f'{pretty_line}Epoch: {epoch + 1}/{epochs}')
         tf.print('\nTRAIN')
