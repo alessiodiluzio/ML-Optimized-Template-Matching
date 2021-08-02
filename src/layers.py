@@ -12,9 +12,9 @@ class SiameseConv2D(tf.keras.layers.Layer):
         self.padding = padding.upper()
         self.activation = activation
         self.batch_normalization = None
-        self.W = tf.Variable(0.)
-        self.b_source = tf.Variable(0.)
-        self.b_template = tf.Variable(0.)
+        self.W = tf.constant(0.)
+        self.b_source = tf.constant(0.)
+        self.b_template = tf.constant(0.)
 
     def build(self, input_shape):
         w_shape = self.kernel_size + (input_shape[0][-1], self.filters)
@@ -76,7 +76,7 @@ class CorrelationFilter(tf.keras.layers.Layer):
 
     def __init__(self):
         super(CorrelationFilter, self).__init__(name='correlation_filter')
-        self.b = tf.Variable(0.)
+        self.b = tf.constant(0.)
         self.perm = tf.convert_to_tensor([1, 2, 0, 3])
         self.stride = [1, 1, 1, 1]
         self.padding = 'VALID'
