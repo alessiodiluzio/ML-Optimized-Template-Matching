@@ -87,6 +87,8 @@ def train(model, train_data_path, epochs, batch_size, loss_fn, optimizer, early_
     last_improvement = tf.constant(0, dtype=tf.float32)
     early_stopping = tf.constant(early_stopping, tf.float32)
 
+    # epochs = tf.constant(epochs, dtype=tf.int32)
+
     train_loss_history = tf.TensorArray(tf.float32, size=epochs)
     train_f1_score_history = tf.TensorArray(tf.float32, size=epochs)
     train_accuracy_history = tf.TensorArray(tf.float32, size=epochs)
