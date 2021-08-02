@@ -28,7 +28,7 @@ if __name__ == "__main__":
         # tf.compat.v1.disable_eager_execution()
         # from tensorflow.python.compiler.mlcompute import mlcompute
         # mlcompute.set_mlc_device('gpu')
-        tf.config.run_functions_eagerly(True)
+        # tf.config.run_functions_eagerly(True)
         print('Train on M1 GPU')
     print(f'Running on platform: {OS}')
     tf.compat.v1.app.run()
