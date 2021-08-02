@@ -11,7 +11,7 @@ message = 'Usage: python main.py <mode> [-p <data_path>]\n' \
           '-p train/test performed on images contained at data_path.\n'
 
 
-def main():
+def main(_):
     arg = sys.argv[1:]
     if len(arg) < 1:
         print(message)
@@ -25,12 +25,13 @@ def main():
 
 if __name__ == "__main__":
     if OS == 'Darwin':
-        from tensorflow.python.compiler.mlcompute import mlcompute
-        mlcompute.set_mlc_device('gpu')
-        tf.compat.v1.disable_eager_execution()
+        # tf.compat.v1.disable_eager_execution()
+        # from tensorflow.python.compiler.mlcompute import mlcompute
+        # mlcompute.set_mlc_device('gpu')
+        tf.config.run_functions_eagerly(True)
         print('Train on M1 GPU')
     print(f'Running on platform: {OS}')
-    main()
+    tf.compat.v1.app.run()
 
 
 

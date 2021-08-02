@@ -2,7 +2,7 @@ import os
 import tensorflow as tf
 
 from matplotlib import pyplot as plt
-from src import X_1, X_2, Y_1, Y_2, IMAGE_DIM, CROP_SIZE, OS
+from src import X_1, X_2, Y_1, Y_2, IMAGE_DIM, CROP_SIZE
 
 
 def get_filenames(path):
@@ -20,9 +20,9 @@ def get_filenames(path):
 
 
 def get_device():
-    device = 'cpu:0'
-    if len(tf.config.list_physical_devices('GPU')) > 0 or OS == 'Darwin':
-        device = 'gpu:0'
+    device = 'cpu'
+    if len(tf.config.list_physical_devices('GPU')) > 0:# or OS == 'Darwin':
+        device = 'gpu'
     return device
 
 
