@@ -26,40 +26,46 @@ def forward_backward_step(model, inputs, label, optimizer, loss_fn, balance_fact
 @tf.function
 def train_loop(model, training_set, train_steps, optimizer, loss_fn, balance_factor):
     print('TRACE TRAIN LOOP')
-    loss_arr = tf.TensorArray(tf.float32, size=train_steps)
-    f1_score_arr = tf.TensorArray(tf.float32, size=train_steps)
-    acc_arr = tf.TensorArray(tf.float32, size=train_steps)
-    for b, (image, template, label) in zip(range(train_steps), training_set.take(train_steps)):
-        tf.print('\rstep {0}/{1}'.format(b + 1, train_steps), end='')
+    train_loss = tf.TensorArray(tf.float32, size=train_steps)
+    train_f1_score = tf.TensorArray(tf.float32, size=train_steps)
+    train_accuracy = tf.TensorArray(tf.float32, size=train_steps)
+    step = tf.constant(0, dtype=tf.int32)
+    for image, template, label in training_set:
         logits, loss = forward_backward_step(model, [image, template], label, optimizer, loss_fn, balance_factor)
-        b = tf.cast(b, dtype=tf.int32)
-        loss_arr = loss_arr.write(b, loss)
+        train_loss = train_loss.write(step, loss)
         prec = precision(logits, label)
         rec = recall(logits, label)
-        f1_score_arr = f1_score_arr.write(b, f1score(prec, rec))
+        train_f1_score = train_f1_score.write(step, f1score(prec, rec))
         acc = accuracy(logits, label)
-        acc_arr = acc_arr.write(b, acc)
-    return loss_arr.stack(), f1_score_arr.stack(), acc_arr.stack()
+        train_accuracy = train_accuracy.write(step, acc)
+        step = tf.add(step, 1)
+    train_loss = tf.reduce_mean(train_loss.stack())
+    train_f1_score = tf.reduce_mean(train_f1_score.stack())
+    train_accuracy = tf.reduce_mean(train_accuracy.stack())
+    return train_loss, train_f1_score, train_accuracy
 
 
 @tf.function
 def val_loop(model, validation_set, val_steps, loss_fn, balance_factor):
     print('TRACE VAL LOOP')
-    loss_arr = tf.TensorArray(tf.float32, size=val_steps)
-    f1_score_arr = tf.TensorArray(tf.float32, size=val_steps)
-    acc_arr = tf.TensorArray(tf.float32, size=val_steps)
-    for b, (image, template, label) in zip(range(val_steps), validation_set.take(val_steps)):
-        tf.print('\rstep {0}/{1}'.format(b + 1, val_steps), end='')
+    val_loss = tf.TensorArray(tf.float32, size=val_steps)
+    val_f1_score = tf.TensorArray(tf.float32, size=val_steps)
+    val_accuracy = tf.TensorArray(tf.float32, size=val_steps)
+    step = tf.constant(0, dtype=tf.int32)
+    for image, template, label in validation_set:
         logits = forward_step(model, [image, template])
         loss = loss_fn(logits, label, activation=None, balance_factor=balance_factor, training=False)
-        b = tf.cast(b, dtype=tf.int32)
-        loss_arr = loss_arr.write(b, loss)
+        val_loss = val_loss.write(step, loss)
         prec = precision(logits, label)
         rec = recall(logits, label)
-        f1_score_arr = f1_score_arr.write(b, f1score(prec, rec))
+        val_f1_score = val_f1_score.write(step, f1score(prec, rec))
         acc = accuracy(logits, label)
-        acc_arr = acc_arr.write(b, acc)
-    return loss_arr.stack(), f1_score_arr.stack(), acc_arr.stack()
+        val_accuracy = val_accuracy.write(step, acc)
+        step = tf.add(step, 1)
+    val_loss = tf.reduce_mean(val_loss.stack())
+    val_f1_score = tf.reduce_mean(val_f1_score.stack())
+    val_accuracy = tf.reduce_mean(val_accuracy.stack())
+    return val_loss, val_f1_score, val_accuracy
 
 
 @tf.function
@@ -72,7 +78,7 @@ def update(new_metric, old_metric, improvement, metric_name):
 
 @tf.function
 def train(model, train_data_path, epochs, batch_size, loss_fn, optimizer, early_stopping=15):
-    # print("TRACE TRAIN")
+    print("TRACE TRAIN")
     training_set, validation_set, train_steps, val_steps = get_dataset(train_data_path, batch_size, show=False)
 
     balance_factor = get_balance_factor()
@@ -95,24 +101,9 @@ def train(model, train_data_path, epochs, batch_size, loss_fn, optimizer, early_
 
         tf.print(f'{pretty_line}Epoch: {epoch + 1}/{epochs}')
         tf.print('\nTRAIN')
-        train_loss = tf.TensorArray(tf.float32, size=train_steps)
-        train_f1_score = tf.TensorArray(tf.float32, size=train_steps)
-        train_accuracy = tf.TensorArray(tf.float32, size=train_steps)
 
-        for b, (image, template, label) in zip(range(train_steps), training_set.take(train_steps)):
-            tf.print('\rstep {0}/{1}'.format(b + 1, train_steps), end='')
-            logits, loss = forward_backward_step(model, [image, template], label, optimizer, loss_fn, balance_factor)
-            b = tf.cast(b, dtype=tf.int32)
-            train_loss = train_loss.write(b, loss)
-            prec = precision(logits, label)
-            rec = recall(logits, label)
-            train_f1_score = train_f1_score.write(b, f1score(prec, rec))
-            acc = accuracy(logits, label)
-            train_accuracy = train_accuracy.write(b, acc)
-
-        train_loss = tf.reduce_mean(train_loss.stack())
-        train_f1_score = tf.reduce_mean(train_f1_score.stack())
-        train_accuracy = tf.reduce_mean(train_accuracy.stack())
+        train_loss, train_f1_score, train_accuracy = \
+            train_loop(model, training_set, train_steps, optimizer, loss_fn, balance_factor)
         tf.print('\nLoss: ', train_loss, ' F1 Score: ', train_f1_score, ' Accuracy: ', train_accuracy)
 
         train_loss_history = train_loss_history.write(epoch, train_loss)
@@ -120,25 +111,7 @@ def train(model, train_data_path, epochs, batch_size, loss_fn, optimizer, early_
         train_accuracy_history = train_accuracy_history.write(epoch, train_accuracy)
 
         tf.print("\nVALIDATE")
-        val_loss = tf.TensorArray(tf.float32, size=val_steps)
-        val_f1_score = tf.TensorArray(tf.float32, size=val_steps)
-        val_accuracy = tf.TensorArray(tf.float32, size=val_steps)
-
-        for b, (image, template, label) in zip(range(val_steps), validation_set.take(val_steps)):
-            tf.print('\rStep {0}/{1}'.format(b + 1, val_steps), end='')
-            logits = forward_step(model, [image, template])
-            loss = loss_fn(logits, label, activation=None, balance_factor=balance_factor, training=False)
-            b = tf.cast(b, dtype=tf.int32)
-            val_loss = val_loss.write(b, loss)
-            prec = precision(logits, label)
-            rec = recall(logits, label)
-            val_f1_score = val_f1_score.write(b, f1score(prec, rec))
-            acc = accuracy(logits, label)
-            val_accuracy = val_accuracy.write(b, acc)
-
-        val_loss = tf.reduce_mean(val_loss.stack())
-        val_f1_score = tf.reduce_mean(val_f1_score.stack())
-        val_accuracy = tf.reduce_mean(val_accuracy.stack())
+        val_loss, val_f1_score, val_accuracy = val_loop(model, validation_set, val_steps, loss_fn, balance_factor)
         tf.print('\nLoss: ', val_loss, ' F1 Score: ', val_f1_score, ' Accuracy: ', val_accuracy)
 
         val_loss_history = val_loss_history.write(epoch, val_loss)
