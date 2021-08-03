@@ -25,11 +25,8 @@ def main(_):
 
 if __name__ == "__main__":
     if OS == 'Darwin':
-        # tf.compat.v1.disable_eager_execution()
-        # from tensorflow.python.compiler.mlcompute import mlcompute
-        # mlcompute.set_mlc_device('gpu')
-        # tf.config.run_functions_eagerly(True)
         print('Train on M1 GPU')
+    # tf.config.run_functions_eagerly(True)
     print(f'Running on platform: {OS}')
     tf.compat.v1.app.run()
 
