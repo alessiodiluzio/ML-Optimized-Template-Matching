@@ -48,7 +48,7 @@ def train(model, training_set, validation_set, train_steps, val_steps, epochs, l
     val_accuracy_history = tf.TensorArray(tf.float32, size=epochs)
 
     pretty_line = '\n! --------------------------------------------------------- !\n'
-    for epoch in range(epochs):
+    for epoch in tf.range(epochs):
         print('Trace Epoch')
         tf.print(pretty_line, 'Epoch: ', tf.add(epoch, 1), '/', epochs)
 
