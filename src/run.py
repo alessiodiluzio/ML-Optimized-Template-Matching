@@ -7,17 +7,17 @@ from src.training import train
 from src.test import test
 from src.model import Siamese
 from src.loss import logistic_loss, cross_entropy_loss
-from src.utils import plot_metrics, plot, get_device
+from src.utils import plot_metrics, plot
 from src.dataset import get_dataset
 
 
 def run_train():
     model = Siamese()
     start = time.time()
-    device = get_device()
-    with tf.device(device):
-        history = train(model, DATA_PATH, EPOCHS, BATCH_SIZE, loss_fn=logistic_loss,
-                        optimizer=tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE), early_stopping=15)
+    training_set, validation_set, train_steps, val_steps = get_dataset(DATA_PATH, BATCH_SIZE, show=False)
+    history = train(model, training_set, validation_set, train_steps, val_steps, EPOCHS,
+                    loss_fn=logistic_loss, optimizer=tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE),
+                    early_stopping=15)
 
     print(f'Elapsed {time.time() - start}')
 

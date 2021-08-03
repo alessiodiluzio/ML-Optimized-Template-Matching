@@ -26,7 +26,7 @@ def main(_):
 if __name__ == "__main__":
     if OS == 'Darwin':
         print('Train on M1 GPU')
-    # tf.config.run_functions_eagerly(True)
+    tf.config.run_functions_eagerly(True)
     print(f'Running on platform: {OS}')
     tf.compat.v1.app.run()
 

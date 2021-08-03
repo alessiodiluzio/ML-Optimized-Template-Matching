@@ -2,22 +2,22 @@ import tensorflow as tf
 
 from src.metrics import precision, recall, accuracy, f1score
 from src.utils import get_balance_factor, get_device
-from src.dataset import get_dataset
-
 
 @tf.function
-def forward_step(model, inputs):
-    output = model(inputs, training=False)
+def forward_step(model, inputs, device):
+    with tf.device(device):
+        output = model(inputs, training=False)
     return output
 
 
 @tf.function
-def forward_backward_step(model, inputs, label, optimizer, loss_fn, balance_factor):
-    with tf.GradientTape() as tape:
-        logits = model(inputs, training=True)
-        loss = loss_fn(logits, label, activation=None, balance_factor=balance_factor, training=True)
-    gradients = tape.gradient(loss, model.trainable_weights)
-    optimizer.apply_gradients(zip(gradients, model.trainable_weights))
+def forward_backward_step(model, inputs, label, optimizer, loss_fn, balance_factor, device):
+    with tf.device(device):
+        with tf.GradientTape() as tape:
+            logits = model(inputs, training=True)
+            loss = loss_fn(logits, label, activation=None, balance_factor=balance_factor, training=True)
+        gradients = tape.gradient(loss, model.trainable_weights)
+        optimizer.apply_gradients(zip(gradients, model.trainable_weights))
     return logits, loss
 
 
@@ -30,12 +30,11 @@ def update(new_metric, old_metric, improvement, metric_name):
 
 
 @tf.function
-def train(model, train_data_path, epochs, batch_size, loss_fn, optimizer, early_stopping=15):
+def train(model, training_set, validation_set, train_steps, val_steps, epochs, loss_fn, optimizer, early_stopping=15):
     print("TRACE TRAIN")
-    training_set, validation_set, train_steps, val_steps = get_dataset(train_data_path, batch_size, show=False)
 
     balance_factor = get_balance_factor()
-
+    device = get_device()
     best_loss = tf.constant(1000000, dtype=tf.float32)
     last_improvement = tf.constant(0, dtype=tf.float32)
     early_stopping = tf.constant(early_stopping, tf.float32)
@@ -61,7 +60,7 @@ def train(model, train_data_path, epochs, batch_size, loss_fn, optimizer, early_
         step = tf.constant(0, dtype=tf.int32)
         for image, template, label in training_set:
             logits, loss = forward_backward_step(model, [image, template],
-                                                 label, optimizer, loss_fn, balance_factor)
+                                                 label, optimizer, loss_fn, balance_factor, device)
             train_loss_arr = train_loss_arr.write(step, loss)
             prec = precision(logits, label)
             rec = recall(logits, label)
@@ -86,7 +85,7 @@ def train(model, train_data_path, epochs, batch_size, loss_fn, optimizer, early_
         val_acc_arr = tf.TensorArray(tf.float32, size=val_steps)
         step = tf.constant(0)
         for image, template, label in validation_set:
-            logits = forward_step(model, [image, template])
+            logits = forward_step(model, [image, template], device)
             loss = loss_fn(logits, label, activation=None, balance_factor=balance_factor, training=False)
             val_loss_arr = val_loss_arr.write(step, loss)
             prec = precision(logits, label)
