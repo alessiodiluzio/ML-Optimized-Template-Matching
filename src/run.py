@@ -6,7 +6,7 @@ from src import EPOCHS, DATA_PATH, LEARNING_RATE, BATCH_SIZE
 from src.training import train
 from src.test import test
 from src.model import Siamese
-from src.loss import logistic_loss, cross_entropy_loss
+from src.loss import logistic_loss
 from src.utils import plot_metrics, plot
 from src.dataset import get_dataset
 
@@ -14,10 +14,13 @@ from src.dataset import get_dataset
 def run_train():
     model = Siamese()
     start = time.time()
+    best_loss = tf.Variable(1000000.)
+    last_improvement = tf.Variable(0)
+    early_stopping = tf.Variable(15)
     training_set, validation_set, train_steps, val_steps = get_dataset(DATA_PATH, BATCH_SIZE, show=False)
     history = train(model, training_set, validation_set, train_steps, val_steps, EPOCHS,
-                    loss_fn=logistic_loss, optimizer=tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE),
-                    early_stopping=15)
+                    logistic_loss, tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE),
+                    early_stopping, best_loss, last_improvement)
 
     print(f'Elapsed {time.time() - start}')
 
