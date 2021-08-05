@@ -1,5 +1,6 @@
 import tensorflow as tf
 import os
+
 from src.layers import SiameseConv2D, CorrelationFilter
 
 
@@ -8,17 +9,18 @@ class Siamese(tf.keras.Model):
     def __init__(self):
         super(Siamese, self).__init__(name='Siamese')
         self._alex_net_encoder = None
-        self._correlation_filter = None
         self._up_sample = None
+        self.correlation_filter = None
 
     def build(self, input_shape):
         self._alex_net_encoder = AlexnetEncoder()
-        self._correlation_filter = CorrelationFilter()
         self._up_sample = tf.keras.layers.UpSampling2D(size=(15, 15))
+        self.correlation_filter = CorrelationFilter()
 
+    @tf.function
     def call(self, input_tensor, training=False, **kwargs):
         x, z = self._alex_net_encoder(input_tensor, training)
-        corr = self._correlation_filter([x, z])
+        corr = self.correlation_filter([x, z])
         net_final = self._up_sample(corr)
         return net_final
 
@@ -47,6 +49,8 @@ class AlexnetEncoder(tf.keras.Model):
         self.conv4 = None
         self.conv5 = None
 
+        self.correlation_filter = None
+
     def build(self, input_shape):
         self.conv1 = SiameseConv2D(filters=96, kernel_size=(11, 11), strides=2,
                                    padding='valid', activation=tf.keras.activations.relu, name='Conv_1')
@@ -63,6 +67,7 @@ class AlexnetEncoder(tf.keras.Model):
         self.conv5 = SiameseConv2D(filters=128, kernel_size=(3, 3), strides=1, padding='valid',
                                    activation=None, name='Conv_5')
 
+    @tf.function
     def call(self, input_tensor, training=False, **kwargs):
         output = self.conv1(input_tensor, training)
 
@@ -77,10 +82,9 @@ class AlexnetEncoder(tf.keras.Model):
         x, z = self.conv3([x, z], training)
         x, z = self.conv4([x, z], training)
         x, z = self.conv5([x, z], training)
+
         return x, z
 
     @staticmethod
     def get_name():
         return 'alexnet_encoder'
-
-
