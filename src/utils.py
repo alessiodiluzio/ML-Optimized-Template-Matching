@@ -57,21 +57,25 @@ def plot(image, template, label=None, logit=None, target='save', dest='.'):
         n_plot += 1
     if logit is not None:
         n_plot += 1
+    curr_plot = 1
     fig = plt.figure()
-    sub_plt = fig.add_subplot(1, n_plot, 1)
+    sub_plt = fig.add_subplot(1, n_plot, curr_plot)
+    curr_plot += 1
     sub_plt.set_title("Source")
     plt.imshow(image)
-    sub_plt = fig.add_subplot(1, n_plot, 2)
+    sub_plt = fig.add_subplot(1, n_plot, curr_plot)
+    curr_plot += 1
     sub_plt.set_title("Template")
     plt.imshow(template)
     if label is not None:
         label = tf.squeeze(label, axis=-1)
-        sub_plt = fig.add_subplot(1, n_plot, 3)
+        sub_plt = fig.add_subplot(1, n_plot, curr_plot)
+        curr_plot += 1
         sub_plt.set_title("Ground Truth")
         plt.imshow(label)
     if logit is not None:
         logit = tf.squeeze(logit, axis=-1)
-        sub_plt = fig.add_subplot(1, n_plot, 4)
+        sub_plt = fig.add_subplot(1, n_plot, curr_plot)
         sub_plt.set_title("Prediction")
         plt.imshow(logit)
     if target == 'save':

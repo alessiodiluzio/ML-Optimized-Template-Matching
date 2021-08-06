@@ -36,6 +36,8 @@ class Trainer:
         self.val_f1_score_epoch = tf.Variable(0.)
         self.val_accuracy_epoch = tf.Variable(0.)
 
+        self.best_weights = None
+
     @tf.function
     def forward_step(self, inputs):
         output = self.model(inputs, training=False)
@@ -57,6 +59,7 @@ class Trainer:
         tf.print('Improve ', metric_name, ' value: ', self.best_metric, ' ----> ', new_metric)
         self.best_metric.assign(new_metric)
         self.last_improvement.assign(0.)
+        self.best_weights = self.model.weights
         return tf.constant(0.)
 
     @tf.function
@@ -140,4 +143,4 @@ class Trainer:
         val_accuracy_history = val_accuracy_history.stack()
 
         return train_loss_history, train_f1_score_history, train_accuracy_history, \
-               val_loss_history, val_f1_score_history, val_accuracy_history
+               val_loss_history, val_f1_score_history, val_accuracy_history, self.best_weights

@@ -28,9 +28,13 @@ def main(_):
         elif arg == '-eager':
             eager = True
         elif '-epochs' in arg:
-            epochs = int(arg.split('=')[1].strip())
+            epochs = (arg.split('=')[1].strip())
+            if epochs.isdigit():
+                epochs = int(epochs)
+            else:
+                epochs = None
         elif '-datapath' in arg:
-            data_path = arg.split('-datapath')[1].strip()
+            data_path = arg.split('=')[1].strip()
 
     configuration = Config(epochs=epochs, data_path=data_path)
 
@@ -44,7 +48,7 @@ def main(_):
         run_train(configuration)
     elif mode == 'test':
         print('TEST MODE work in progress...')
-        # run_test()
+        run_test(configuration)
 
 
 if __name__ == "__main__":

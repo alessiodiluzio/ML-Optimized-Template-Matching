@@ -27,7 +27,17 @@ def preprocess(image):
     """
     image = tf.image.resize(image, [config.IMAGE_DIM, config.IMAGE_DIM])
     image /= 255
+    return image
 
+
+def extract_crop(image):
+    """
+    3)
+    Extract crop from an image at specified coordinates.
+    :param image: Tensorflow decoded image
+    :param boxes: the coordinates of a box specified by [x_min, x_max, y_min, y_max].
+    :return: Source image, the crop extracted from source image, the coordinates of the box.
+    """
     x1 = tf.random.uniform(shape=[1], minval=0, maxval=config.IMAGE_DIM - config.CROP_SIZE, dtype=tf.int32)
     y1 = tf.random.uniform(shape=[1], minval=0, maxval=config.IMAGE_DIM - config.CROP_SIZE, dtype=tf.int32)
 
@@ -39,18 +49,6 @@ def preprocess(image):
 
     boxes = tf.concat([x1, y1, x2, y2], axis=0)
     boxes = tf.convert_to_tensor(boxes, dtype=tf.float32)
-    return image, boxes
-
-
-def extract_crop(image, boxes):
-    """
-    3)
-    Extract crop from an image at specified coordinates.
-    :param image: Tensorflow decoded image
-    :param boxes: the coordinates of a box specified by [x_min, x_max, y_min, y_max].
-    :return: Source image, the crop extracted from source image, the coordinates of the box.
-    """
-
     begin = tf.stack([tf.cast(boxes[config.Y_1], dtype=tf.int32), tf.cast(boxes[config.X_1], dtype=tf.int32), 0], axis=0)
     template = tf.slice(image, begin, size=[config.CROP_SIZE, config.CROP_SIZE, 3])
     return image, template, boxes
@@ -84,7 +82,7 @@ def perturb(image, template, label):
     return image, template, label
 
 
-def make_dataset(images_path, batch_size, augmentation=False):
+def make_train_set(images_path, batch_size, augmentation=False):
     """
     Build a dataset from a list of image
     :param images_path: List containing path of images
@@ -105,7 +103,7 @@ def make_dataset(images_path, batch_size, augmentation=False):
     return dataset
 
 
-def get_dataset(data_path=config.DATA_PATH, batch_size=config.BATCH_SIZE, split_perc=0.7, show=False):
+def get_train_set(data_path, batch_size, split_perc=0.7, show=False):
     """
     Build training and validation set ready for training phase.
     :param data_path: Path to the folder that contains the dataset images
@@ -118,10 +116,21 @@ def get_dataset(data_path=config.DATA_PATH, batch_size=config.BATCH_SIZE, split_
     val_index = int(len(images) * split_perc)
     training_images = images[:val_index]
     validation_images = images[val_index:]
-    training_set = make_dataset(training_images, batch_size, augmentation=True)
-    validation_set = make_dataset(validation_images, batch_size)
+    training_set = make_train_set(training_images, batch_size, augmentation=True)
+    validation_set = make_train_set(validation_images, batch_size)
     training_step = int(len(training_images)/config.BATCH_SIZE)  # training step = | TRAINING_SET |/batch_size
     validation_step = int(len(validation_images)/config.BATCH_SIZE)  # validation step = | VALIDATION_SET |/batch_size
     if show:
         plot_dataset(training_set, 3, target='show')
     return training_set, validation_set, training_step, validation_step
+
+
+def get_test_set(data_path):
+    images = get_filenames(data_path)
+    test_step = len(images)
+    test_set = tf.data.Dataset.from_tensor_slices(images)
+    test_set = test_set.map(load_image)  # 1)
+    test_set = test_set.map(preprocess)
+    test_set = test_set.map(extract_crop)
+    test_set = test_set.batch(config.BATCH_SIZE, drop_remainder=True)
+    return test_set, test_step

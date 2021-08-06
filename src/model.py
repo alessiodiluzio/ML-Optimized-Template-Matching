@@ -24,15 +24,8 @@ class Siamese(tf.keras.Model):
         net_final = self._up_sample(corr)
         return net_final
 
-    def save_model(self, checkpoint_dir):
-        tf.saved_model.save(self._alex_net_encoder, os.path.join(checkpoint_dir, AlexnetEncoder.get_name()))
-        tf.saved_model.save(self._correlation_filter, os.path.join(checkpoint_dir, CorrelationFilter.get_name()))
-
-    def load_model(self, checkpoint_dir):
-        self._alex_net_encoder = tf.keras.models.load_model(os.path.join(checkpoint_dir,
-                                                                         AlexnetEncoder.get_name()))
-        self._correlation_filter = tf.keras.models.load_model(os.path.join(checkpoint_dir,
-                                                                           CorrelationFilter.get_name()))
+    def get_config(self):
+        return {"name": self.name}
 
 
 class AlexnetEncoder(tf.keras.Model):
@@ -69,6 +62,7 @@ class AlexnetEncoder(tf.keras.Model):
 
     @tf.function
     def call(self, input_tensor, training=False, **kwargs):
+
         output = self.conv1(input_tensor, training)
 
         x = self.pool1(output[0])
@@ -85,6 +79,5 @@ class AlexnetEncoder(tf.keras.Model):
 
         return x, z
 
-    @staticmethod
-    def get_name():
-        return 'alexnet_encoder'
+    def get_config(self):
+        return {'name': self.name}
