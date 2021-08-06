@@ -4,7 +4,7 @@ import tensorflow as tf
 import os
 
 from src import config
-from src.training import Trainer
+from src.training import train
 from src.test import test
 from src.model import Siamese
 from src.loss import logistic_loss
@@ -19,14 +19,11 @@ def run_train(configuration):
     device = get_device()
     training_set, validation_set, train_steps, val_steps = get_dataset(configuration.get_data_path(), config.BATCH_SIZE,
                                                                        show=False)
-    trainer = Trainer(model, training_set, validation_set, train_steps, val_steps, configuration.get_epochs(),
-                      tf.keras.optimizers.Adam(learning_rate=config.LEARNING_RATE), logistic_loss, loss_balance_factor,
-                      device, 15)
+    history = train(model, training_set, validation_set, train_steps, val_steps, configuration.get_epochs(),
+                    tf.keras.optimizers.Adam(learning_rate=config.LEARNING_RATE), logistic_loss, loss_balance_factor, 15)
 
     start = time.time()
-    trainer()
     print(f'Elapsed {time.time() - start}')
-    history = trainer.get_training_data()
 
     model_history = {
         'train_loss': history[0],
@@ -37,7 +34,7 @@ def run_train(configuration):
         'val_f1score': history[5]
     }
 
-    # plot_metrics(model_history, 'plot')
+    plot_metrics(model_history, 'plot')
 
     _, validation_set, _, _ = get_dataset()
     dest_path = 'image'
