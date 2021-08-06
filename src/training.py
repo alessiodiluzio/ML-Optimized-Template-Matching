@@ -55,7 +55,6 @@ class Trainer:
 
     @tf.function
     def update(self, new_metric, metric_name):
-        print('TRACE UPDATE')
         tf.print('Improve ', metric_name, ' value: ', self.best_metric, ' ----> ', new_metric)
         self.best_metric.assign(new_metric)
         self.last_improvement.assign(0.)
@@ -106,23 +105,21 @@ class Trainer:
         for epoch in tf.range(self.epochs):
             tf.print(pretty_line, 'Epoch: ', tf.add(epoch, 1), '/', self.epochs)
 
-            tf.print('\nTRAIN')
             self.train_loop()
             train_loss = tf.divide(self.train_loss_epoch, self.train_steps)
             train_f1_score = tf.divide(self.train_f1_score_epoch, self.train_steps)
             train_accuracy = tf.divide(self.train_accuracy_epoch, self.train_steps)
 
-            tf.print('\nLoss: ', train_loss, ' F1 Score: ', train_f1_score, ' Accuracy: ', train_accuracy)
+            tf.print('\nLoss: ', train_loss, ' F1 Score: ', train_f1_score, ' Accuracy: ', train_accuracy, '\n')
             train_loss_history = train_loss_history.write(epoch, train_loss)
             train_f1_score_history = train_f1_score_history.write(epoch, train_f1_score)
             train_accuracy_history = train_accuracy_history.write(epoch, train_accuracy)
 
-            tf.print("\nVALIDATE")
             self.val_loop()
             val_loss = tf.divide(self.val_loss_epoch, self.val_steps)
             val_f1_score = tf.divide(self.val_f1_score_epoch, self.val_steps)
             val_accuracy = tf.divide(self.val_accuracy_epoch, self.val_steps)
-            tf.print('\nLoss: ', val_loss, ' F1 Score: ', val_f1_score, ' Accuracy: ', val_accuracy)
+            tf.print('\nLoss: ', val_loss, ' F1 Score: ', val_f1_score, ' Accuracy: ', val_accuracy, '\n')
 
             val_loss_history = val_loss_history.write(epoch, val_loss)
             val_f1_score_history = val_f1_score_history.write(epoch, val_f1_score)
