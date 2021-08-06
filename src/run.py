@@ -4,7 +4,7 @@ import tensorflow as tf
 import os
 
 from src import config
-from src.training import train
+from src.training import Trainer
 from src.test import test
 from src.model import Siamese
 from src.loss import logistic_loss
@@ -19,22 +19,27 @@ def run_train(configuration):
     device = get_device()
     training_set, validation_set, train_steps, val_steps = get_dataset(configuration.get_data_path(), config.BATCH_SIZE,
                                                                        show=False)
-    history = train(model, training_set, validation_set, train_steps, val_steps, configuration.get_epochs(),
-                    tf.keras.optimizers.Adam(learning_rate=config.LEARNING_RATE), logistic_loss, loss_balance_factor, 15)
+    trainer = Trainer(model, training_set, validation_set, train_steps, val_steps, configuration.get_epochs(),
+                      tf.keras.optimizers.Adam(learning_rate=config.LEARNING_RATE), logistic_loss, loss_balance_factor,
+                      device, 15)
 
     start = time.time()
+    trainer()
     print(f'Elapsed {time.time() - start}')
 
+    print(tf.shape(trainer.train_loss_history))
+
     model_history = {
-        'train_loss': history[0],
-        'train_acc': history[1],
-        'train_f1score': history[2],
-        'val_loss': history[3],
-        'val_acc': history[4],
-        'val_f1score': history[5]
+        'train_loss': trainer.train_loss_history,
+        'train_acc': trainer.train_accuracy_history,
+        'train_f1score': trainer.train_f1_score_history,
+        'val_loss': trainer.val_loss_history,
+        'val_acc': trainer.val_accuracy_history,
+        'val_f1score': trainer.val_f1_score_history
     }
 
-    plot_metrics(model_history, 'plot')
+
+    # plot_metrics(model_history, 'plot')
 
     _, validation_set, _, _ = get_dataset()
     dest_path = 'image'
