@@ -74,7 +74,7 @@ class Trainer:
             rec = recall(logits, label)
             self.train_f1_score_epoch.assign_add(f1score(prec, rec))
             self.train_accuracy_epoch.assign_add(accuracy(logits, label))
-            tf.print('\rTrain ', step + 1, '/', self.train_steps, 'Loss: ', loss, end='')
+            tf.print('\rTrain ', step + 1, '/', self.train_steps, 'Loss:', tf.divide(loss, step), end='')
 
     @tf.function
     def val_loop(self):
@@ -89,7 +89,7 @@ class Trainer:
             rec = recall(logits, label)
             self.val_f1_score_epoch.assign_add(f1score(prec, rec))
             self.val_accuracy_epoch.assign_add(accuracy(logits, label))
-            tf.print('\rValidate ', step + 1, '/', self.val_steps, 'Loss: ', loss, end='')
+            tf.print('\rValidate ', step + 1, '/', self.val_steps, 'Loss:', tf.divide(loss, step), end='')
 
     @tf.function
     def __call__(self):
