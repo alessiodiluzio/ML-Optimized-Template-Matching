@@ -36,15 +36,6 @@ class Trainer:
         self.val_f1_score_epoch = tf.Variable(0.)
         self.val_accuracy_epoch = tf.Variable(0.)
 
-        # After each epochs a summary of Loss, F1Score and Accuracy for both train and validation phase is saved.
-        # It can be used for training analysis and plot
-        self.train_loss_history = None
-        self.train_f1_score_history = None
-        self.train_accuracy_history = None
-        self.val_loss_history = None
-        self.val_f1_score_history = None
-        self.val_accuracy_history = None
-
     @tf.function
     def forward_step(self, inputs):
         output = self.model(inputs, training=False)
@@ -100,13 +91,13 @@ class Trainer:
     @tf.function
     def __call__(self):
         #
-        self.train_loss_history = tf.TensorArray(tf.float32, size=self.epochs)
-        self.train_f1_score_history = tf.TensorArray(tf.float32, size=self.epochs)
-        self.train_accuracy_history = tf.TensorArray(tf.float32, size=self.epochs)
+        train_loss_history = tf.TensorArray(tf.float32, size=self.epochs)
+        train_f1_score_history = tf.TensorArray(tf.float32, size=self.epochs)
+        train_accuracy_history = tf.TensorArray(tf.float32, size=self.epochs)
 
-        self.val_loss_history = tf.TensorArray(tf.float32, size=self.epochs)
-        self.val_f1_score_history = tf.TensorArray(tf.float32, size=self.epochs)
-        self.val_accuracy_history = tf.TensorArray(tf.float32, size=self.epochs)
+        val_loss_history = tf.TensorArray(tf.float32, size=self.epochs)
+        val_f1_score_history = tf.TensorArray(tf.float32, size=self.epochs)
+        val_accuracy_history = tf.TensorArray(tf.float32, size=self.epochs)
 
         pretty_line = '\n! --------------------------------------------------------- !\n'
         for epoch in tf.range(self.epochs):
@@ -119,9 +110,9 @@ class Trainer:
             train_accuracy = tf.divide(self.train_accuracy_epoch, self.train_steps)
 
             tf.print('\nLoss: ', train_loss, ' F1 Score: ', train_f1_score, ' Accuracy: ', train_accuracy)
-            self.train_loss_history = self.train_loss_history.write(epoch, train_loss)
-            self.train_f1_score_history = self.train_f1_score_history.write(epoch, train_f1_score)
-            self.train_accuracy_history = self.train_accuracy_history.write(epoch, train_accuracy)
+            train_loss_history = train_loss_history.write(epoch, train_loss)
+            train_f1_score_history = train_f1_score_history.write(epoch, train_f1_score)
+            train_accuracy_history = train_accuracy_history.write(epoch, train_accuracy)
 
             tf.print("\nVALIDATE")
             self.val_loop()
@@ -130,9 +121,9 @@ class Trainer:
             val_accuracy = tf.divide(self.val_accuracy_epoch, self.val_steps)
             tf.print('\nLoss: ', val_loss, ' F1 Score: ', val_f1_score, ' Accuracy: ', val_accuracy)
 
-            self.val_loss_history = self.val_loss_history.write(epoch, val_loss)
-            self.val_f1_score_history = self.val_f1_score_history.write(epoch, val_f1_score)
-            self.val_accuracy_history = self.val_accuracy_history.write(epoch, val_accuracy)
+            val_loss_history = val_loss_history.write(epoch, val_loss)
+            val_f1_score_history = val_f1_score_history.write(epoch, val_f1_score)
+            val_accuracy_history = val_accuracy_history.write(epoch, val_accuracy)
 
             tf.cond(tf.less(val_loss, self.best_metric),
                     lambda: self.update(val_loss, 'Validation Loss'),
@@ -140,10 +131,13 @@ class Trainer:
             epoch = tf.cond(tf.greater_equal(self.last_improvement, self.early_stopping),
                             lambda: self.epochs, lambda: epoch)
 
-        self.train_loss_history = self.train_loss_history.stack()
-        self.train_f1_score_history = self.train_f1_score_history.stack()
-        self.train_accuracy_history = self.train_accuracy_history.stack()
+        train_loss_history = train_loss_history.stack()
+        train_f1_score_history = train_f1_score_history.stack()
+        train_accuracy_history = train_accuracy_history.stack()
 
-        self.val_loss_history = self.val_loss_history.stack()
-        self.val_f1_score_history = self.val_f1_score_history.stack()
-        self.val_accuracy_history = self.val_accuracy_history.stack()
+        val_loss_history = val_loss_history.stack()
+        val_f1_score_history = val_f1_score_history.stack()
+        val_accuracy_history = val_accuracy_history.stack()
+
+        return train_loss_history, train_f1_score_history, train_accuracy_history, \
+               val_loss_history, val_f1_score_history, val_accuracy_history

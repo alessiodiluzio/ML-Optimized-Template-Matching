@@ -24,22 +24,19 @@ def run_train(configuration):
                       device, 15)
 
     start = time.time()
-    trainer()
+    history = trainer()
     print(f'Elapsed {time.time() - start}')
 
-    print(tf.shape(trainer.train_loss_history))
-
     model_history = {
-        'train_loss': trainer.train_loss_history,
-        'train_acc': trainer.train_accuracy_history,
-        'train_f1score': trainer.train_f1_score_history,
-        'val_loss': trainer.val_loss_history,
-        'val_acc': trainer.val_accuracy_history,
-        'val_f1score': trainer.val_f1_score_history
+        'train_loss': history[0],
+        'train_f1score': history[1],
+        'train_acc': history[2],
+        'val_loss': history[3],
+        'val_f1score': history[4],
+        'val_acc': history[5],
     }
 
-
-    # plot_metrics(model_history, 'plot')
+    plot_metrics(model_history, 'plot')
 
     _, validation_set, _, _ = get_dataset()
     dest_path = 'image'
