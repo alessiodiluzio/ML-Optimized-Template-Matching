@@ -55,7 +55,7 @@ class Trainer:
 
     @tf.function
     def update(self, new_metric, metric_name):
-        tf.print('Improve ', metric_name, ' value: ', self.best_metric, ' ----> ', new_metric)
+        tf.print('\nImprove ', metric_name, ' value: ', self.best_metric, ' ----> ', new_metric)
         self.best_metric.assign(new_metric)
         self.last_improvement.assign(0.)
         self.best_weights = self.model.weights
@@ -75,7 +75,6 @@ class Trainer:
             # self.train_accuracy_epoch.assign_add(accuracy(logits, label))
             mean_train_loss = tf.divide(self.train_loss_epoch, tf.cast(step + 1, dtype=tf.float32))
             tf.print('\rTrain ', step + 1, '/', self.train_steps, 'Loss:', mean_train_loss, end='')
-        tf.print('\n')
 
     @tf.function
     def val_loop(self):
@@ -92,7 +91,6 @@ class Trainer:
             # self.val_accuracy_epoch.assign_add(accuracy(logits, label))
             mean_val_loss =  tf.divide(self.val_loss_epoch, tf.cast(step + 1, dtype=tf.float32))
             tf.print('\rValidate ', step + 1, '/', self.val_steps, 'Loss:', mean_val_loss, end='')
-        tf.print('aaaa\n')
 
     @tf.function
     def __call__(self):
@@ -111,6 +109,7 @@ class Trainer:
             tf.print('Epoch: ', tf.add(epoch, 1), '/', self.epochs)
 
             self.train_loop()
+            tf.print('\n')
             train_loss = tf.divide(self.train_loss_epoch, self.train_steps)
             # train_f1_score = tf.divide(self.train_f1_score_epoch, self.train_steps)
             # train_accuracy = tf.divide(self.train_accuracy_epoch, self.train_steps)
@@ -120,6 +119,7 @@ class Trainer:
             # train_f1_score_history = train_f1_score_history.write(epoch, train_f1_score)
             # train_accuracy_history = train_accuracy_history.write(epoch, train_accuracy)
             self.val_loop()
+            tf.print('\n')
             val_loss = tf.divide(self.val_loss_epoch, self.val_steps)
             # val_f1_score = tf.divide(self.val_f1_score_epoch, self.val_steps)
             # val_accuracy = tf.divide(self.val_accuracy_epoch, self.val_steps)
@@ -145,5 +145,7 @@ class Trainer:
 
         # return train_loss_history, train_f1_score_history, train_accuracy_history, \
         #       val_loss_history, val_f1_score_history, val_accuracy_history, self.best_weights
+
+        tf.print(pretty_line)
 
         return train_loss_history, val_loss_history, self.best_weights
