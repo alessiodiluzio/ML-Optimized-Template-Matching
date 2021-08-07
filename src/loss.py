@@ -25,7 +25,7 @@ def cross_entropy_loss(logits, labels, balance_factor, training=True):
     if training:
         cross_entropy = tf.expand_dims(cross_entropy, axis=3)
         weights = get_balanced_weights(balance_factor, label)
-        cross_entropy = tf.math.multiply(cross_entropy, weights)
+        cross_entropy = tf.math.multiply(tf.squeeze(cross_entropy, axis=-1), weights)
     return tf.reduce_mean(cross_entropy)
 
 
