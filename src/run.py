@@ -33,7 +33,7 @@ def run_train(configuration):
 
     trainer = Trainer(model, training_set, validation_set, train_steps, val_steps, configuration.get_epochs(),
                       configuration.get_optimizer(), logistic_loss, loss_balance_factor,
-                      device, 15)
+                      device, 15, 'saved_model', 'checkpoint')
 
     start = time.time()
     history = trainer()
@@ -47,19 +47,16 @@ def run_train(configuration):
         # 'val_f1score': history[4],
         # ' val_acc': history[5],
     }
-    model.set_weights(history[2])
 
-    ckpt = tf.train.Checkpoint(net=model)
-    manager = tf.train.CheckpointManager(ckpt, 'checkpoint', max_to_keep=3)
-    manager.save()
-    tf.keras.models.save_model(model, 'saved_model')
     plot_metrics(model_history, 'plot')
+
+    best_model = tf.keras.models.load_model('saved_model')
 
     _, validation_set, _, _ = get_train_set(configuration.get_data_path(), configuration.get_batch_size())
     dest_path = 'image'
     for i, (image, template, label) in zip(range(3), validation_set.take(3)):
-        prediction = model([image, template], training=False)
-        filename = f'prediction_{i}_model_{model.name}.jpg'
+        prediction = best_model([image, template], training=False)
+        filename = f'prediction_{i}_model_{best_model.name}.jpg'
         file_path = os.path.join(dest_path, filename)
         plot(image[[0]], template[0], label[0], prediction[0], target='save', dest=file_path)
 

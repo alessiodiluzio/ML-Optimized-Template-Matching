@@ -5,7 +5,7 @@ from src.metrics import precision, recall, accuracy, f1score
 
 class Trainer:
     def __init__(self, model, training_set, validation_set, train_steps, val_steps, epochs,
-                 optimizer, loss_fn, loss_balance_factor, device, early_stopping):
+                 optimizer, loss_fn, loss_balance_factor, device, early_stopping, save_model_dir, checkpoint_dir):
 
         # Variables needed to train a model
         self.model = model
@@ -36,7 +36,10 @@ class Trainer:
         self.val_f1_score_epoch = tf.Variable(0.)
         self.val_accuracy_epoch = tf.Variable(0.)
 
-        self.best_weights = None
+        self.saved_model_dir = save_model_dir
+        self.checkpoint_dir = checkpoint_dir
+        self.checkpoint = tf.train.Checkpoint(net=model)
+        self.checkpoint_manager = tf.train.CheckpointManager(self.checkpoint, self.checkpoint_dir, max_to_keep=3)
 
     @tf.function
     def forward_step(self, inputs):
@@ -53,12 +56,12 @@ class Trainer:
         self.optimizer.apply_gradients(zip(gradients, self.model.trainable_weights))
         return logits, loss
 
-    @tf.function
     def update(self, new_metric, metric_name):
         tf.print('\nImprove ', metric_name, ' value: ', self.best_metric, ' ----> ', new_metric)
         self.best_metric.assign(new_metric)
         self.last_improvement.assign(0.)
-        self.best_weights = self.model.weights
+        tf.keras.models.save_model(self.model, self.saved_model_dir)
+        self.checkpoint_manager.save()
         return tf.constant(0.)
 
     @tf.function
@@ -94,7 +97,7 @@ class Trainer:
             tf.print('\rValidate ', step + 1, '/', self.val_steps, 'Loss:', mean_val_loss, end='')
         tf.print('\n')
 
-    @tf.function
+    # @tf.function
     def __call__(self):
 
         train_loss_history = tf.TensorArray(tf.float32, size=self.epochs)
@@ -134,6 +137,7 @@ class Trainer:
             tf.cond(tf.less(val_loss, self.best_metric),
                     lambda: self.update(val_loss, 'Validation Loss'),
                     lambda: self.last_improvement.assign_add(1.))
+
             epoch = tf.cond(tf.greater_equal(self.last_improvement, self.early_stopping),
                             lambda: self.epochs, lambda: epoch)
 
@@ -149,4 +153,4 @@ class Trainer:
         #       val_loss_history, val_f1_score_history, val_accuracy_history, self.best_weights
 
         tf.print(pretty_line)
-        return train_loss_history, val_loss_history, self.best_weights
+        return train_loss_history, val_loss_history
