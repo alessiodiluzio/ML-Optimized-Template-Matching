@@ -1,5 +1,6 @@
+""" Implementation of Siamese Model described in https://arxiv.org/pdf/1606.09549.pdf """
+
 import tensorflow as tf
-import os
 
 from src.layers import SiameseConv2D, CorrelationFilter
 

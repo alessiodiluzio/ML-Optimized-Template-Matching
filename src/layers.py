@@ -5,7 +5,7 @@ from src import config
 
 
 """ 
-This is a classical convolutional layer followed by Batch Normalization.
+Implementation of a classical convolutional layer followed by Batch Normalization adapted to a Siamese network.
 Since it is thought to be used in a Siamese network, Kernel Weights are shared between two different
 input channel. 
 (Each input channel has its own bias since the input size, height and width, can be different)
@@ -13,7 +13,6 @@ input channel.
 
 
 class SiameseConv2D(tf.keras.layers.Layer):
-
     def __init__(self, filters, kernel_size, strides, padding, activation, name, **kwargs):
         super(SiameseConv2D, self).__init__(name=name, **kwargs)
         self.filters = filters
@@ -27,6 +26,15 @@ class SiameseConv2D(tf.keras.layers.Layer):
         self.b_template = tf.constant(0.)
 
     def build(self, input_shape):
+        """
+        Build convolutional layer on its first call.
+        :param input_shape: [shape of x, shape of z] where x and z are the feature maps
+        extracted from source and template image at current stage.
+        Shape is in the form [B, H, W, C] where B is the batch size, H, W and C are
+        Height, Width and Channels of feature map.
+        Weights of kernel (shared) and biases are built according to the shape of x and z.
+        :return:
+        """
         w_shape = self.kernel_size + (input_shape[0][-1], self.filters)
         b_source_shape = (int((input_shape[0][1] - self.kernel_size[0])/self.strides) + 1,
                           int((input_shape[0][2] - self.kernel_size[1])/self.strides) + 1,
@@ -42,6 +50,16 @@ class SiameseConv2D(tf.keras.layers.Layer):
 
     @tf.function
     def call(self, inputs, training=False, **kwargs):
+        """
+        Apply convolution to source and template images using same kernel but different biases (due to different size of
+        source and template), then, if the layer is called during the training phase, batch normalization is applied.
+        :param inputs: [x, z] where x and z are the feature maps
+        extracted from source and template image at current stage.
+        :param training: True if batch normalization is applied after convolution (training phase)
+        false on the contrary (inference).
+        :param kwargs:
+        :return: [x, z] where x and z are the maps of feature extracted from the source and template images.
+        """
         x = inputs[0]
         z = inputs[1]
         x = tf.nn.conv2d(x, filters=self.W, strides=[1, self.strides, self.strides, 1], padding=self.padding) \
@@ -54,6 +72,13 @@ class SiameseConv2D(tf.keras.layers.Layer):
             x = self.activation(x)
             z = self.activation(z)
         return x, z
+
+
+"""
+Implementation of the correlation filter described in https://arxiv.org/pdf/1606.09549.pdf
+and implemented at https://github.com/torrvision/siamfc-tf/blob/master/src/siamese.py.
+In a nutshell, Source image feature maps are convolved using template feature maps as kernel.
+"""
 
 
 class CorrelationFilter(tf.keras.layers.Layer):
@@ -70,6 +95,14 @@ class CorrelationFilter(tf.keras.layers.Layer):
         self.output_channels = None
 
     def build(self, input_shape):
+        """
+         Build correlation filter on its first call, Shape of bias is chosen according to net output dim.
+        :param input_shape: [shape of x, shape of z]  where x and z are the feature maps
+        extracted from source and template image at current stage.
+        Shape is in the form [B, H, W, C] where B is the batch size, H, W and C are
+        Height, Width and Channels of feature map.
+        :return:
+        """
         self.source_output_dim = input_shape[0][1]
         self.template_output_dim = input_shape[1][1]
         self.batch_size = input_shape[0][0]
@@ -79,9 +112,16 @@ class CorrelationFilter(tf.keras.layers.Layer):
 
     @tf.function
     def call(self, inputs, *args, **kwargs):
-
-        # adattamento di _match_templates dal paper
-        # di Luca Bertinetto https://github.com/torrvision/siamfc-tf/blob/master/src/siamese.py
+        """
+        Implementation of correlation filter,
+        refer to https://github.com/torrvision/siamfc-tf/blob/master/src/siamese.py and
+        https://arxiv.org/pdf/1606.09549.pdf.
+        :param inputs:  [x, z] where x and z are the feature maps
+        extracted from source and template image at current stage.
+        :param args: unused
+        :param kwargs: unused
+        :return: Heatmap score for the localization of template in source image.
+        """
 
         # z, x are [B, H, W, C]
 
@@ -108,7 +148,3 @@ class CorrelationFilter(tf.keras.layers.Layer):
         # final is [B, Hf, Wf, 1]
 
         return net_final
-
-    @staticmethod
-    def get_name():
-        return 'correlation_filter'
