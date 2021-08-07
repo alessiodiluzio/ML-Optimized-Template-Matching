@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from src.metrics import precision, recall, accuracy, f1score
+# from src.metrics import precision, recall, accuracy, f1score
 
 
 class Trainer:
@@ -50,8 +50,7 @@ class Trainer:
     def forward_backward_step(self, inputs, label):
         with tf.GradientTape() as tape:
             logits = self.model(inputs, training=True)
-            loss = self.loss_fn(logits, label, activation=None,
-                                balance_factor=self.loss_balance_factor, training=True)
+            loss = self.loss_fn(logits, label, balance_factor=self.loss_balance_factor, training=True)
         gradients = tape.gradient(loss, self.model.trainable_weights)
         self.optimizer.apply_gradients(zip(gradients, self.model.trainable_weights))
         return logits, loss
@@ -87,13 +86,13 @@ class Trainer:
         self.val_accuracy_epoch.assign(0.)
         for step, (image, template, label) in self.validation_set.enumerate():
             logits = self.forward_step([image, template])
-            loss = self.loss_fn(logits, label, activation=None, balance_factor=self.loss_balance_factor, training=False)
+            loss = self.loss_fn(logits, label, balance_factor=self.loss_balance_factor, training=False)
             self.val_loss_epoch.assign_add(loss)
             # prec = precision(logits, label)
             # rec = recall(logits, label)
             # self.val_f1_score_epoch.assign_add(f1score(prec, rec))
             # self.val_accuracy_epoch.assign_add(accuracy(logits, label))
-            mean_val_loss =  tf.divide(self.val_loss_epoch, tf.cast(step + 1, dtype=tf.float32))
+            mean_val_loss = tf.divide(self.val_loss_epoch, tf.cast(step + 1, dtype=tf.float32))
             tf.print('\rValidate ', step + 1, '/', self.val_steps, 'Loss:', mean_val_loss, end='')
         tf.print('\n')
 

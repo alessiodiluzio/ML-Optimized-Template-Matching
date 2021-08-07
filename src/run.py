@@ -6,7 +6,7 @@ import os
 from src.training import Trainer
 from src.test import test
 from src.model import Siamese
-from src.loss import logistic_loss
+from src.loss import logistic_loss, cross_entropy_loss
 from src.utils import plot_metrics, plot, get_loss_balance_factor, get_device
 from src.dataset import get_train_set
 
@@ -32,7 +32,7 @@ def run_train(configuration):
                                                                          configuration.get_batch_size(), show=False)
 
     trainer = Trainer(model, training_set, validation_set, train_steps, val_steps, configuration.get_epochs(),
-                      configuration.get_optimizer(), logistic_loss, loss_balance_factor,
+                      configuration.get_optimizer(), cross_entropy_loss, loss_balance_factor,
                       device, 15, 'saved_model', 'checkpoint')
 
     start = time.time()
