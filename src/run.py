@@ -37,7 +37,7 @@ def run_train(configuration):
 
     start = time.time()
     history = trainer()
-    print(f'Elapsed {time.time() - start}')
+    print(f'\nElapsed {time.time() - start}')
 
     model_history = {
         'train_loss': history[0],
