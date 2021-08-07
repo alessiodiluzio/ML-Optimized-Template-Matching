@@ -35,7 +35,6 @@ def extract_crop(image):
     3)
     Extract crop from an image at specified coordinates.
     :param image: Tensorflow decoded image
-    :param boxes: the coordinates of a box specified by [x_min, x_max, y_min, y_max].
     :return: Source image, the crop extracted from source image, the coordinates of the box.
     """
     x1 = tf.random.uniform(shape=[1], minval=0, maxval=config.IMAGE_DIM - config.CROP_SIZE, dtype=tf.int32)
@@ -65,7 +64,18 @@ def generate_ground_truth(image, template, boxes):
                 by 'ones' in the pixel that match with crop coordinates, the remaining pixels have value zero
     """
     boxes = tf.cast(boxes, dtype=tf.int32)
+
     label = make_label(boxes, config.IMAGE_DIM)
+
+    # center_x = tf.divide(tf.add(boxes[2], - boxes[0]), 2)
+    # center_y = tf.divide(tf.add(boxes[3], - boxes[1]), 2)
+    #
+    # center = tf.ones((10, 10))
+    # paddings = [[center_y - 4, config.IMAGE_DIM - center_y - 5], [center_x - 4, config.IMAGE_DIM - center_x - 5]]
+    # ret = tf.pad(center, paddings, mode='CONSTANT', constant_values=-1)
+    # ret = tf.cast(ret, dtype=tf.float32)
+    # ret = tf.zeros((config.IMAGE_DIM, config.IMAGE_DIM)) + ret
+    # ret = tf.expand_dims(ret, axis=-1)
     return image, template, label
 
 
@@ -118,8 +128,8 @@ def get_train_set(data_path, batch_size, split_perc=0.7, show=False):
     validation_images = images[val_index:]
     training_set = make_train_set(training_images, batch_size, augmentation=True)
     validation_set = make_train_set(validation_images, batch_size)
-    training_step = int(len(training_images)/config.BATCH_SIZE)  # training step = | TRAINING_SET |/batch_size
-    validation_step = int(len(validation_images)/config.BATCH_SIZE)  # validation step = | VALIDATION_SET |/batch_size
+    training_step = int(len(training_images)/batch_size)  # training step = | TRAINING_SET |/batch_size
+    validation_step = int(len(validation_images)/batch_size)  # validation step = | VALIDATION_SET |/batch_size
     if show:
         plot_dataset(training_set, 3, target='show')
     return training_set, validation_set, training_step, validation_step

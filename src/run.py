@@ -3,7 +3,6 @@ import time
 import tensorflow as tf
 import os
 
-from src import config
 from src.training import Trainer
 from src.test import test
 from src.model import Siamese
@@ -15,12 +14,25 @@ from src.dataset import get_train_set
 def run_train(configuration):
     model = Siamese()
 
+    msg_line = '# -------------------------------------------\n'
+    msg_line_1 = '# --- TRAIN\n'
+    msg_line_2 = f'# --- Net {model.name}\n'
+    msg_line_3 = f'# --- Epochs {configuration.get_epochs()}\n'
+    msg_line_4 = f'# --- Batch size {configuration.get_batch_size()}\n'
+    msg_line_5 = f'# --- Optimizer {configuration.get_optimizer_name()}\n'
+    msg_line_6 = f'# --- Learning Rate {configuration.get_learning_rate()}\n'
+
+    msg = msg_line + msg_line_1 + msg_line_2 + msg_line_3 + msg_line_4 + msg_line_5 + msg_line_6 + msg_line
+
+    print(msg)
+
     loss_balance_factor = get_loss_balance_factor()
     device = get_device()
     training_set, validation_set, train_steps, val_steps = get_train_set(configuration.get_data_path(),
-                                                                         config.BATCH_SIZE, show=False)
+                                                                         configuration.get_batch_size(), show=False)
+
     trainer = Trainer(model, training_set, validation_set, train_steps, val_steps, configuration.get_epochs(),
-                      tf.keras.optimizers.Adam(learning_rate=config.LEARNING_RATE), logistic_loss, loss_balance_factor,
+                      configuration.get_optimizer(), logistic_loss, loss_balance_factor,
                       device, 15)
 
     start = time.time()
@@ -29,21 +41,21 @@ def run_train(configuration):
 
     model_history = {
         'train_loss': history[0],
-        'train_f1score': history[1],
-        'train_acc': history[2],
-        'val_loss': history[3],
-        'val_f1score': history[4],
-        'val_acc': history[5],
+        # 'train_f1score': history[1],
+        # 'train_acc': history[2],
+        'val_loss': history[1],
+        # 'val_f1score': history[4],
+        # ' val_acc': history[5],
     }
-    model.set_weights(history[6])
-    # tf.saved_model.save(model, 'checkpoint')
+    model.set_weights(history[2])
+
     ckpt = tf.train.Checkpoint(net=model)
     manager = tf.train.CheckpointManager(ckpt, 'checkpoint', max_to_keep=3)
     manager.save()
     tf.keras.models.save_model(model, 'saved_model')
     plot_metrics(model_history, 'plot')
 
-    _, validation_set, _, _ = get_train_set(configuration.get_data_path(), config.BATCH_SIZE)
+    _, validation_set, _, _ = get_train_set(configuration.get_data_path(), configuration.get_batch_size())
     dest_path = 'image'
     for i, (image, template, label) in zip(range(3), validation_set.take(3)):
         prediction = model([image, template], training=False)

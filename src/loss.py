@@ -6,7 +6,7 @@ from src.utils import get_zero_base_label
 def get_balanced_weigths(balance_factor, label):
     label_true = tf.divide(tf.add(label, 1), 2)
     label_false = tf.multiply(tf.divide(tf.add(label, - 1), 2), -1)
-    return tf.add(tf.multiply(tf.add(1.0, -balance_factor), label_true), tf.multiply(balance_factor, label_false))
+    return tf.add(tf.multiply(tf.add(1.0, -balance_factor), label_false), tf.multiply(balance_factor, label_true))
 
 
 @tf.function
@@ -36,9 +36,8 @@ def compute_logistic_loss(labels, logits):
 @tf.function
 def logistic_loss(logits, label, activation, balance_factor, training=True):
     log_loss = compute_logistic_loss(label, logits)
-    if training:
-        pass
-        weights = get_balanced_weigths(balance_factor, label)
-        log_loss = tf.math.multiply(log_loss, weights)
+    # if training:
+    #    weights = get_balanced_weigths(balance_factor, label)
+    #    log_loss = tf.math.multiply(log_loss, weights)
     log_loss = tf.reduce_mean(log_loss)
     return log_loss

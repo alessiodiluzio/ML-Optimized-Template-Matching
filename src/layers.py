@@ -79,18 +79,18 @@ class CorrelationFilter(tf.keras.layers.Layer):
         z = tf.transpose(inputs[1], perm=[1, 2, 0, 3])
         # z, x are [H, W, B, C]
 
-        x = tf.reshape(x, (1, config.IMAGE_OUTPUT_DIM, config.IMAGE_OUTPUT_DIM,
-                           config.BATCH_SIZE * config.OUTPUT_CHANNELS))
+        x = tf.reshape(x, (1, self.source_output_dim, self.source_output_dim,
+                           self.batch_size * self.output_channels))
         # x is [1, Hx, Wx, B*C]
 
-        z = tf.reshape(z, (config.CROP_OUTPUT_DIM, config.CROP_OUTPUT_DIM,
-                           config.BATCH_SIZE * config.OUTPUT_CHANNELS, 1))
+        z = tf.reshape(z, (self.template_output_dim, self.template_output_dim,
+                           self.batch_size * self.output_channels, 1))
         # z is [Hz, Wz, B*C, 1]
 
         net_final = tf.nn.depthwise_conv2d(x, z, strides=[1, 1, 1, 1], padding='VALID') + self.b
         # final is [1, Hf, Wf, BC]
 
-        net_final = tf.split(net_final, config.BATCH_SIZE, axis=3)
+        net_final = tf.split(net_final, self.batch_size, axis=3)
         net_final = tf.concat(net_final, axis=0)
         # final is [B, Hf, Wf, C]
 
