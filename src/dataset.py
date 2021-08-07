@@ -48,7 +48,7 @@ def extract_crop(image):
 
     boxes = tf.concat([x1, y1, x2, y2], axis=0)
     boxes = tf.convert_to_tensor(boxes, dtype=tf.float32)
-    begin = tf.stack([tf.cast(boxes[config.Y_1], dtype=tf.int32), tf.cast(boxes[config.X_1], dtype=tf.int32), 0], axis=0)
+    begin = tf.stack([tf.cast(boxes[1], dtype=tf.int32), tf.cast(boxes[0], dtype=tf.int32), 0], axis=0)
     template = tf.slice(image, begin, size=[config.CROP_SIZE, config.CROP_SIZE, 3])
     return image, template, boxes
 

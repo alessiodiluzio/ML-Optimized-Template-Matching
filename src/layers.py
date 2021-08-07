@@ -1,5 +1,15 @@
+""" Implementation of net Layers"""
+
 import tensorflow as tf
 from src import config
+
+
+""" 
+This is a classical convolutional layer followed by Batch Normalization.
+Since it is thought to be used in a Siamese network, Kernel Weights are shared between two different
+input channel. 
+(Each input channel has its own bias since the input size, height and width, can be different)
+"""
 
 
 class SiameseConv2D(tf.keras.layers.Layer):

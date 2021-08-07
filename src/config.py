@@ -1,3 +1,5 @@
+""" Configuration and default values for data processing and net training """
+
 import platform
 import tensorflow as tf
 
@@ -12,7 +14,6 @@ IMAGE_OUTPUT_DIM = 22
 CROP_OUTPUT_DIM = 6
 OUTPUT_CHANNELS = 128
 OUTPUT_DIM = 17
-
 CHANNELS = 3
 CROP_SIZE = 127
 CROP_BOX = (CROP_SIZE, CROP_SIZE)
@@ -23,14 +24,15 @@ BATCH_SIZE = 10
 EPOCHS = 50
 LEARNING_RATE = 0.0000099
 
-# UTILS
-X_1 = 0
-Y_1 = 1
-X_2 = 2
-Y_2 = 3
+
+""" 
+Wrap configuration values,  data_path, epochs, batch_size, learning_rate, optimizer can be configured by
+command line.
+"""
 
 
 class Config:
+
     def __init__(self, data_path, epochs, batch_size, learning_rate, optimizer):
         self.__epochs = epochs
         self. __data_path = data_path

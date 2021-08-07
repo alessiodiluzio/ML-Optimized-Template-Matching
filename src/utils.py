@@ -28,10 +28,10 @@ def get_device():
 
 def make_label(boxes, outer_box_dim=config.IMAGE_DIM):
 
-    x1 = boxes[config.X_1]
-    y1 = boxes[config.Y_1]
-    x2 = boxes[config.X_2]
-    y2 = boxes[config.Y_2]
+    x1 = boxes[0]
+    y1 = boxes[1]
+    x2 = boxes[2]
+    y2 = boxes[3]
 
     x, y = x2 - x1, y2 - y1
 
