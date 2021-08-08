@@ -1,6 +1,8 @@
 import tensorflow as tf
-
+import os
 # from src.metrics import precision, recall, accuracy, f1score
+from src.utils import plot
+from src.loss import compute_logistic_loss
 
 
 class Trainer:
@@ -140,6 +142,17 @@ class Trainer:
             epoch = tf.cond(tf.greater_equal(self.last_improvement, self.early_stopping),
                             lambda: self.epochs, lambda: epoch)
 
+            tf.print(pretty_line)
+            for i, (image, template, label) in enumerate(self.validation_set.take(3)):
+                prediction = self.model([image, template], training=False)
+                filename = f'prediction_{i}_model_{self.model.name}_epoch_{epoch}.jpg'
+                file_path = os.path.join('image', filename)
+                filename = f'file://epoch_{epoch}.txt'
+                tf.print(tf.squeeze(prediction[0], axis=-1), output_stream=filename, summarize=-1)
+                tf.print(tf.squeeze(label[0], axis=-1), output_stream=filename, summarize=-1)
+                tf.print(tf.squeeze(compute_logistic_loss(label[0], prediction[0]), axis=-1), output_stream=filename,summarize=-1)
+                plot(image[[0]], template[0], label[0], prediction[0], target='save', dest=file_path)
+
         train_loss_history = train_loss_history.stack()
         # train_f1_score_history = train_f1_score_history.stack()
         # train_accuracy_history = train_accuracy_history.stack()
@@ -151,5 +164,5 @@ class Trainer:
         # return train_loss_history, train_f1_score_history, train_accuracy_history, \
         #       val_loss_history, val_f1_score_history, val_accuracy_history, self.best_weights
 
-        tf.print(pretty_line)
+
         return train_loss_history, val_loss_history

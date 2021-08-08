@@ -1,7 +1,6 @@
 """ Implementation of loss  functions """
 
 import tensorflow as tf
-from src.utils import get_zero_base_label
 
 
 @tf.function
@@ -19,8 +18,13 @@ def get_balanced_weights(balance_factor, label):
 
 
 @tf.function
+def get_zero_label(labels):
+    return tf.divide(tf.add(labels, 1.0), 2.0)
+
+
+@tf.function
 def cross_entropy_loss(logits, labels, balance_factor, training=True):
-    label = get_zero_base_label(labels)
+    label = get_zero_label(labels)
     cross_entropy = tf.compat.v1.nn.sigmoid_cross_entropy_with_logits(labels=label, logits=logits)
     if training:
         cross_entropy = tf.expand_dims(cross_entropy, axis=3)
@@ -49,7 +53,6 @@ def logistic_loss(logits, label, balance_factor, training=True):
     Compute the mean logistic loss balanced by a balance factor for the current batch.
     :param logits: Current batch logits
     :param label: Current batch labels
-    :param activation: unused
     :param balance_factor: percentage of positive pixels in the entire training set.
     :param training: True if loss must be balanced due to positive/negative imbalance in dataset (training phase)
     false on the contrary (inference/test)

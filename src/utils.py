@@ -85,11 +85,6 @@ def plot(image, template, label=None, logit=None, target='save', dest='.'):
         plt.show()
 
 
-@tf.function
-def get_zero_base_label(labels):
-    return tf.divide(tf.add(labels, 1.0), 2.0)
-
-
 def plot_dataset(dataset, samples, target='save', dest='.'):
     i = 0
     for image, template, label in dataset.take(samples):

@@ -34,28 +34,25 @@ def main(_):
             mode = 'test'
         elif arg == '-eager':
             eager = True
-        elif '-epochs' == arg.split('=')[0]:
-            epochs = (arg.split('=')[1].strip())
-            if epochs.isdigit():
-                epochs = int(epochs)
-            else:
-                epochs = None
         elif '-datapath' == arg.split('=')[0]:
             data_path = arg.split('=')[1].strip()
+        elif '-epochs' == arg.split('=')[0]:
+            try:
+                epochs = int(arg.split('=')[1].strip())
+            except ValueError:
+                epochs = None
         elif '-batch' == arg.split('=')[0]:
-            batch_size = (arg.split('=')[1].strip())
-            if batch_size.isdigit():
-                batch_size = int(batch_size)
-            else:
+            try:
+                batch_size = int(arg.split('=')[1].strip())
+            except ValueError:
                 batch_size = None
+        elif '-lr' == arg.split('=')[0]:
+            try:
+                learning_rate = float(arg.split('=')[1].strip())
+            except ValueError:
+                learning_rate = None
         elif '-optimizer' == arg.split('=')[0]:
             optimizer = arg.split('=')[1].strip()
-        elif '-lr' == arg.split('=')[0]:
-            learning_rate = (arg.split('=')[1].strip())
-            if learning_rate.isnumeric():
-                learning_rate = float(learning_rate)
-            else:
-                learning_rate = None
 
     configuration = Config(data_path=data_path, epochs=epochs, batch_size=batch_size,
                            optimizer=optimizer, learning_rate=learning_rate)
