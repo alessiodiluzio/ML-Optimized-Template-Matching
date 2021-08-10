@@ -1,7 +1,9 @@
 import tensorflow as tf
 import os
+import numpy as np
 # from src.metrics import precision, recall, accuracy, f1score
 from src.utils import plot
+from src.bounding_box import draw_bounding_box_from_heatmap
 from src.loss import compute_logistic_loss
 
 
@@ -143,15 +145,20 @@ class Trainer:
                             lambda: self.epochs, lambda: epoch)
 
             tf.print(pretty_line)
+
             for i, (image, template, label) in enumerate(self.validation_set.take(3)):
-                prediction = self.model([image, template], training=False)
-                filename = f'prediction_{i}_model_{self.model.name}_epoch_{epoch}.jpg'
+                heatmap = self.model([image, template], training=False)[0]
+                bb_proposal = draw_bounding_box_from_heatmap(heatmap)
+                filename = f'validation_{i}_model_{self.model.name}_epoch_{epoch}.jpg'
                 file_path = os.path.join('image', filename)
-                filename = f'file://epoch_{epoch}.txt'
-                tf.print(tf.squeeze(prediction[0], axis=-1), output_stream=filename, summarize=-1)
-                tf.print(tf.squeeze(label[0], axis=-1), output_stream=filename, summarize=-1)
-                tf.print(tf.squeeze(compute_logistic_loss(label[0], prediction[0]), axis=-1), output_stream=filename,summarize=-1)
-                plot(image[[0]], template[0], label[0], prediction[0], target='save', dest=file_path)
+                plot(image[[0]], template[0], label[0], bb_proposal, target='save', dest=file_path)
+
+            for i, (image, template, label) in enumerate(self.training_set.take(3)):
+                heatmap = self.model([image, template], training=False)[0]
+                bb_proposal = draw_bounding_box_from_heatmap(heatmap)
+                filename = f'training_{i}_model_{self.model.name}_epoch_{epoch}.jpg'
+                file_path = os.path.join('image', filename)
+                plot(image[[0]], template[0], label[0], bb_proposal, target='save', dest=file_path)
 
         train_loss_history = train_loss_history.stack()
         # train_f1_score_history = train_f1_score_history.stack()
