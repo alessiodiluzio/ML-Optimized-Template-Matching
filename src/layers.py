@@ -85,7 +85,6 @@ class CorrelationFilter(tf.keras.layers.Layer):
 
     def __init__(self):
         super(CorrelationFilter, self).__init__(name='correlation_filter')
-        self.b = tf.constant(0.)
         self.perm = tf.convert_to_tensor([1, 2, 0, 3])
         self.stride = [1, 1, 1, 1]
         self.padding = 'VALID'
@@ -93,6 +92,7 @@ class CorrelationFilter(tf.keras.layers.Layer):
         self.source_output_dim = None
         self.template_output_dim = None
         self.output_channels = None
+        self.batch_normalization = None
 
     def build(self, input_shape):
         """
@@ -107,11 +107,10 @@ class CorrelationFilter(tf.keras.layers.Layer):
         self.template_output_dim = input_shape[1][1]
         self.batch_size = input_shape[0][0]
         self.output_channels = input_shape[0][3]
-        b_shape = (1, config.OUTPUT_DIM, config.OUTPUT_DIM, self.batch_size * self.output_channels)
-        self.b = self.add_weight(name='bias', shape=b_shape, initializer='zeros', trainable=True)
+        self.batch_normalization = tf.keras.layers.BatchNormalization(axis=-1)
 
     @tf.function
-    def call(self, inputs, *args, **kwargs):
+    def call(self, inputs, training=False, *args, **kwargs):
         """
         Implementation of correlation filter,
         refer to https://github.com/torrvision/siamfc-tf/blob/master/src/siamese.py and
@@ -137,7 +136,7 @@ class CorrelationFilter(tf.keras.layers.Layer):
                            self.batch_size * self.output_channels, 1))
         # z is [Hz, Wz, B*C, 1]
 
-        net_final = tf.nn.depthwise_conv2d(x, z, strides=[1, 1, 1, 1], padding='VALID') + self.b
+        net_final = tf.nn.depthwise_conv2d(x, z, strides=[1, 1, 1, 1], padding='VALID')
         # final is [1, Hf, Wf, BC]
 
         net_final = tf.split(net_final, self.batch_size, axis=3)
@@ -146,5 +145,8 @@ class CorrelationFilter(tf.keras.layers.Layer):
 
         net_final = tf.expand_dims(tf.reduce_sum(net_final, axis=3), axis=3)
         # final is [B, Hf, Wf, 1]
+
+        if training:
+            net_final = self.batch_normalization(net_final)
 
         return net_final

@@ -21,7 +21,7 @@ class Siamese(tf.keras.Model):
     @tf.function
     def call(self, input_tensor, training=False, **kwargs):
         x, z = self._alex_net_encoder(input_tensor, training)
-        corr = self.correlation_filter([x, z])
+        corr = self.correlation_filter([x, z], training)
         # net_final = self._up_sample(corr)
         return corr
 
