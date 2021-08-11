@@ -26,7 +26,7 @@ def get_device():
     return device
 
 
-def make_label(boxes, outer_box_dim=config.IMAGE_DIM):
+def make_label(boxes, outer_box_dim):
 
     x1 = boxes[0]
     y1 = boxes[1]
@@ -41,7 +41,8 @@ def make_label(boxes, outer_box_dim=config.IMAGE_DIM):
     ret = tf.cast(ret, dtype=tf.float32)
     ret = tf.zeros((outer_box_dim, outer_box_dim)) + ret
     ret = tf.expand_dims(ret, axis=-1)
-
+#    assert ret.shape[0] == ret.shape[1]
+#    assert ret.shape[1] == 17
     return ret
 
 

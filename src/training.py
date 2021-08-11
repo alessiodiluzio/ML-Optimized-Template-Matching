@@ -148,15 +148,20 @@ class Trainer:
 
             for i, (image, template, label) in enumerate(self.validation_set.take(3)):
                 heatmap = self.model([image, template], training=False)[0]
-                bb_proposal = draw_bounding_box_from_heatmap(heatmap)
-                filename = f'validation_{i}_model_{self.model.name}_epoch_{epoch}.jpg'
+                bb_proposal = draw_bounding_box_from_heatmap(heatmap, 8)
+                filename = f'val_sample_epoch_{epoch+1}_{i}.jpg'
                 file_path = os.path.join('image', filename)
                 plot(image[[0]], template[0], label[0], bb_proposal, target='save', dest=file_path)
 
             for i, (image, template, label) in enumerate(self.training_set.take(3)):
                 heatmap = self.model([image, template], training=False)[0]
+                tf.print(tf.squeeze(heatmap, axis=-1), output_stream=f'file://file/heatmap_epoch_{epoch+1}_{i}.txt',
+                         summarize=-1)
+                loss = self.loss_fn(heatmap, label, self.loss_balance_factor, training=True)
+                tf.print('Loss:', loss, output_stream=f'file://file/heatmap_epoch_{epoch + 1}_{i}.txt',
+                         summarize=-1)
                 bb_proposal = draw_bounding_box_from_heatmap(heatmap)
-                filename = f'training_{i}_model_{self.model.name}_epoch_{epoch}.jpg'
+                filename = f'train_sample_epoch_{epoch+1}_{i}.jpg'
                 file_path = os.path.join('image', filename)
                 plot(image[[0]], template[0], label[0], bb_proposal, target='save', dest=file_path)
 

@@ -63,9 +63,12 @@ def generate_ground_truth(image, template, boxes):
     :return: Source image, crop, a 1D image that has the same size of source image and it is composed
                 by 'ones' in the pixel that match with crop coordinates, the remaining pixels have value zero
     """
-    boxes = tf.cast(boxes, dtype=tf.int32)
+    # boxes = tf.cast(boxes, dtype=tf.float64)
+    # boxes = tf.multiply(boxes, tf.divide(config.OUTPUT_DIM, config.IMAGE_DIM))
 
+    boxes = tf.cast(boxes, dtype=tf.int32)
     label = make_label(boxes, config.IMAGE_DIM)
+    label = tf.image.resize(label, [config.OUTPUT_DIM, config.OUTPUT_DIM])
 
     # center_x = tf.divide(tf.add(boxes[2], - boxes[0]), 2)
     # center_y = tf.divide(tf.add(boxes[3], - boxes[1]), 2)

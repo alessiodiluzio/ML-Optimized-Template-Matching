@@ -32,7 +32,7 @@ def run_train(configuration):
                                                                          configuration.get_batch_size(), show=False)
 
     trainer = Trainer(model, training_set, validation_set, train_steps, val_steps, configuration.get_epochs(),
-                      configuration.get_optimizer(), cross_entropy_loss, loss_balance_factor,
+                      configuration.get_optimizer(), logistic_loss, loss_balance_factor,
                       device, 15, 'saved_model', 'checkpoint')
 
     start = time.time()

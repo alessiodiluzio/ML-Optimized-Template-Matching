@@ -14,7 +14,8 @@ def get_balanced_weights(balance_factor, label):
     """
     label_true = tf.divide(tf.add(label, 1), 2)
     label_false = tf.multiply(tf.divide(tf.add(label, - 1), 2), -1)
-    return tf.add(tf.multiply(tf.add(1.0, -balance_factor), label_true), tf.multiply(balance_factor, label_false))
+    return tf.add(tf.multiply(tf.divide(1.0, tf.add(1., -balance_factor)), label_true),
+                  tf.multiply(tf.divide(1., balance_factor), label_false))
 
 
 @tf.function
@@ -59,8 +60,8 @@ def logistic_loss(logits, label, balance_factor, training=True):
     :return: Mean logistic loss for the current batch.
     """
     log_loss = compute_logistic_loss(label, logits)
-    if training:
-        weights = get_balanced_weights(balance_factor, label)
-        log_loss = tf.math.multiply(log_loss, weights)
+    # if training:
+    #    weights = get_balanced_weights(balance_factor, label)
+    #    log_loss = tf.math.multiply(log_loss, weights)
     log_loss = tf.reduce_mean(log_loss)
     return log_loss

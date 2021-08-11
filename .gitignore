@@ -3,6 +3,7 @@ checkpoint
 plot
 image
 .idea
-python_test.py
 saved_model
 data
+file
+python_test.py
