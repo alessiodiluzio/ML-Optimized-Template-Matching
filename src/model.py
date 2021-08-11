@@ -15,14 +15,14 @@ class Siamese(tf.keras.Model):
 
     def build(self, input_shape):
         self._alex_net_encoder = AlexnetEncoder()
-        # self._up_sample = tf.keras.layers.UpSampling2D(size=(15, 15))
+        self._up_sample = tf.keras.layers.UpSampling2D(size=(15, 15))
         self.correlation_filter = CorrelationFilter()
 
     @tf.function
     def call(self, input_tensor, training=False, **kwargs):
         x, z = self._alex_net_encoder(input_tensor, training)
         corr = self.correlation_filter([x, z], training)
-        # net_final = self._up_sample(corr)
+        net_final = self._up_sample(corr)
         return corr
 
     def get_config(self):

@@ -21,5 +21,5 @@ def draw_bounding_box_from_heatmap(heatmap, bb_size):
     boxes = [y_min, x_min, y_max, x_max]
     boxes = tf.reshape(boxes, [1, 1, 4])
     boxes = tf.cast(boxes, dtype=tf.float32) / heatmap.shape[1]
-    colors = np.array([[1.0, 0.0, 0.0]])
+    colors = np.array([[1.0, 1.0, 1.0]])
     return tf.image.draw_bounding_boxes(heatmap, boxes, colors)[0]

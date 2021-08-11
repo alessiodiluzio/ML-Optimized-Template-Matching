@@ -1,10 +1,8 @@
 import tensorflow as tf
 import os
-import numpy as np
 # from src.metrics import precision, recall, accuracy, f1score
 from src.utils import plot
-from src.bounding_box import draw_bounding_box_from_heatmap
-from src.loss import compute_logistic_loss
+# from src.bounding_box import draw_bounding_box_from_heatmap
 
 
 class Trainer:
@@ -147,23 +145,16 @@ class Trainer:
             tf.print(pretty_line)
 
             for i, (image, template, label) in enumerate(self.validation_set.take(3)):
-                heatmap = self.model([image, template], training=False)[0]
-                bb_proposal = draw_bounding_box_from_heatmap(heatmap, 8)
+                heatmap = self.model([image, template], training=False)
                 filename = f'val_sample_epoch_{epoch+1}_{i}.jpg'
                 file_path = os.path.join('image', filename)
-                plot(image[[0]], template[0], label[0], bb_proposal, target='save', dest=file_path)
+                plot(image[[0]], template[0], label[0], heatmap[0], target='save', dest=file_path)
 
             for i, (image, template, label) in enumerate(self.training_set.take(3)):
-                heatmap = self.model([image, template], training=False)[0]
-                tf.print(tf.squeeze(heatmap, axis=-1), output_stream=f'file://file/heatmap_epoch_{epoch+1}_{i}.txt',
-                         summarize=-1)
-                loss = self.loss_fn(heatmap, label, self.loss_balance_factor, training=True)
-                tf.print('Loss:', loss, output_stream=f'file://file/heatmap_epoch_{epoch + 1}_{i}.txt',
-                         summarize=-1)
-                bb_proposal = draw_bounding_box_from_heatmap(heatmap, 8)
+                heatmap = self.model([image, template], training=False)
                 filename = f'train_sample_epoch_{epoch+1}_{i}.jpg'
                 file_path = os.path.join('image', filename)
-                plot(image[[0]], template[0], label[0], bb_proposal, target='save', dest=file_path)
+                plot(image[[0]], template[0], label[0], heatmap[0], target='save', dest=file_path)
 
         train_loss_history = train_loss_history.stack()
         # train_f1_score_history = train_f1_score_history.stack()
@@ -175,6 +166,5 @@ class Trainer:
 
         # return train_loss_history, train_f1_score_history, train_accuracy_history, \
         #       val_loss_history, val_f1_score_history, val_accuracy_history, self.best_weights
-
 
         return train_loss_history, val_loss_history

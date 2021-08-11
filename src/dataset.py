@@ -68,7 +68,6 @@ def generate_ground_truth(image, template, boxes):
 
     boxes = tf.cast(boxes, dtype=tf.int32)
     label = make_label(boxes, config.IMAGE_DIM)
-    label = tf.image.resize(label, [config.OUTPUT_DIM, config.OUTPUT_DIM])
 
     # center_x = tf.divide(tf.add(boxes[2], - boxes[0]), 2)
     # center_y = tf.divide(tf.add(boxes[3], - boxes[1]), 2)
