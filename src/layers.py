@@ -1,7 +1,6 @@
 """ Implementation of net Layers"""
 
 import tensorflow as tf
-from src import config
 
 
 """ 
@@ -110,14 +109,15 @@ class CorrelationFilter(tf.keras.layers.Layer):
         self.batch_normalization = tf.keras.layers.BatchNormalization(axis=-1)
 
     @tf.function
-    def call(self, inputs, training=False, *args, **kwargs):
+    def call(self, inputs, training=False, **kwargs):
         """
         Implementation of correlation filter,
         refer to https://github.com/torrvision/siamfc-tf/blob/master/src/siamese.py and
         https://arxiv.org/pdf/1606.09549.pdf.
         :param inputs:  [x, z] where x and z are the feature maps
         extracted from source and template image at current stage.
-        :param args: unused
+        :param training: True if batch normalization is applied after convolution (training phase)
+        false on the contrary (inference).
         :param kwargs: unused
         :return: Heatmap score for the localization of template in source image.
         """
@@ -146,7 +146,6 @@ class CorrelationFilter(tf.keras.layers.Layer):
         net_final = tf.expand_dims(tf.reduce_sum(net_final, axis=3), axis=3)
         # final is [B, Hf, Wf, 1]
 
-        if training:
-            net_final = self.batch_normalization(net_final)
+        net_final = self.batch_normalization(net_final, training=training)
 
         return net_final
