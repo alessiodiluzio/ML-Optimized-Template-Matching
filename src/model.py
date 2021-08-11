@@ -10,7 +10,7 @@ class Siamese(tf.keras.Model):
     def __init__(self):
         super(Siamese, self).__init__(name='Siamese')
         self._alex_net_encoder = None
-        # self._up_sample = None
+        self._up_sample = None
         self.correlation_filter = None
 
     def build(self, input_shape):
@@ -23,7 +23,7 @@ class Siamese(tf.keras.Model):
         x, z = self._alex_net_encoder(input_tensor, training)
         corr = self.correlation_filter([x, z], training)
         net_final = self._up_sample(corr)
-        return corr
+        return net_final
 
     def get_config(self):
         return {"name": self.name}
